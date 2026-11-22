@@ -55,9 +55,18 @@ actor API {
         throw APIError.http(401)
     }
 
-    func me(_ r: Ruleset) async throws -> User { try await get("/me/\(r.rawValue)") }
+    private var myID: Int?
+
+    func me(_ r: Ruleset) async throws -> User {
+        if myID == nil {
+            let base: User = try await get("/me")
+            myID = base.id
+        }
+        return try await user(String(myID!), r)
+    }
     func user(_ key: String, _ r: Ruleset) async throws -> User {
-        try await get("/users/\(key)/\(r.rawValue)")
+        let isID = Int(key) != nil
+        return try await get("/users/\(key)/\(r.rawValue)", query: isID ? [.init(name: "key", value: "id")] : [])
     }
     func scores(userID: Int, type: String, ruleset: Ruleset) async throws -> [Score] {
         try await get("/users/\(userID)/scores/\(type)", query: [
@@ -79,5 +88,5 @@ actor API {
         ])
         return res.beatmapsets
     }
-    func friends() async throws -> [Relation] { try await get("/friends") }
+    func friends() async throws -> [Friend] { try await get("/friends") }
 }

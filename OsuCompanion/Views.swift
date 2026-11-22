@@ -57,7 +57,7 @@ struct ProfileView: View {
                             Text(u.countryCode ?? "").foregroundStyle(.secondary)
                         }
                     }
-                    if let s = u.statistics {
+                    if let s = u.stats(for: ruleset) {
                         stat("Global rank", s.globalRank.map { "#\($0)" })
                         stat("Country rank", s.countryRank.map { "#\($0)" })
                         stat("PP", s.pp.map { String(format: "%.0f", $0) })
@@ -239,7 +239,7 @@ struct BeatmapSearchView: View {
         .navigationTitle("Beatmaps")
         .searchable(text: $text, prompt: "Search beatmaps")
         .onSubmit(of: .search) { Task { await search() } }
-        .onChange(of: ruleset) { _ in Task { await search() } }
+        .task(id: ruleset) { await search() }
     }
 
     private func search() async {
@@ -252,22 +252,20 @@ struct BeatmapSearchView: View {
 // MARK: Friends
 
 struct FriendsView: View {
-    @State private var friends: [Relation] = []
+    @State private var friends: [Friend] = []
     @State private var error: String?
 
     var body: some View {
         List {
             ForEach(friends) { f in
-                if let u = f.target {
-                    NavigationLink {
-                        ProfileView(userKey: String(u.id))
-                    } label: {
-                        HStack(spacing: 10) {
-                            Avatar(url: u.avatarUrl, size: 36)
-                            Text(u.username)
-                            Spacer()
-                            Circle().fill(u.isOnline == true ? Color.green : Color.gray.opacity(0.4)).frame(width: 10, height: 10)
-                        }
+                NavigationLink {
+                    ProfileView(userKey: String(f.user.id))
+                } label: {
+                    HStack(spacing: 10) {
+                        Avatar(url: f.user.avatarUrl, size: 36)
+                        Text(f.user.username)
+                        Spacer()
+                        Circle().fill(f.user.isOnline == true ? Color.green : Color.gray.opacity(0.4)).frame(width: 10, height: 10)
                     }
                 }
             }

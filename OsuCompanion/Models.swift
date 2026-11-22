@@ -40,6 +40,9 @@ struct User: Decodable, Identifiable, Hashable {
     let countryCode: String?
     let isOnline: Bool?
     let statistics: UserStats?
+    let statisticsRulesets: [String: UserStats]?
+
+    func stats(for r: Ruleset) -> UserStats? { statisticsRulesets?[r.rawValue] ?? statistics }
 
     static func == (l: User, r: User) -> Bool { l.id == r.id }
     func hash(into h: inout Hasher) { h.combine(id) }
@@ -120,8 +123,17 @@ struct Beatmapset: Decodable, Identifiable {
 
 struct SearchResponse: Decodable { let beatmapsets: [Beatmapset] }
 
-struct Relation: Decodable, Identifiable {
-    let targetId: Int
-    let target: User?
-    var id: Int { targetId }
+struct Friend: Decodable, Identifiable {
+    let user: User
+    var id: Int { user.id }
+
+    private struct Wrapper: Decodable { let target: User }
+
+    init(from decoder: Decoder) throws {
+        if let w = try? Wrapper(from: decoder) {
+            user = w.target
+        } else {
+            user = try User(from: decoder)
+        }
+    }
 }
