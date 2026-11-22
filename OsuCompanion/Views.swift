@@ -254,10 +254,16 @@ struct BeatmapSearchView: View {
 struct FriendsView: View {
     @State private var friends: [Friend] = []
     @State private var error: String?
+    @State private var query = ""
+
+    private var filtered: [Friend] {
+        let q = query.trimmingCharacters(in: .whitespaces)
+        return q.isEmpty ? friends : friends.filter { $0.user.username.localizedCaseInsensitiveContains(q) }
+    }
 
     var body: some View {
         List {
-            ForEach(friends) { f in
+            ForEach(filtered) { f in
                 NavigationLink {
                     ProfileView(userKey: String(f.user.id))
                 } label: {
@@ -272,6 +278,7 @@ struct FriendsView: View {
             if let error { ErrorText(message: error) }
         }
         .navigationTitle("Friends")
+        .searchable(text: $query, prompt: "Search friends")
         .refreshable { await load() }
         .task { await load() }
     }

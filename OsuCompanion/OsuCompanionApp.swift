@@ -53,18 +53,28 @@ struct LoginView: View {
 }
 
 struct RootTabs: View {
+    @StateObject private var irc = IRCClient()
+
     var body: some View {
         TabView {
-            NavigationStack { ProfileView(userKey: nil) }
-                .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+            NavigationStack {
+                ProfileView(userKey: nil)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            NavigationLink { SettingsView() } label: { Image(systemName: "gearshape") }
+                        }
+                    }
+            }
+            .tabItem { Label("Profile", systemImage: "person.crop.circle") }
             NavigationStack { RankingsView() }
                 .tabItem { Label("Rankings", systemImage: "list.number") }
             NavigationStack { BeatmapSearchView() }
                 .tabItem { Label("Beatmaps", systemImage: "music.note.list") }
             NavigationStack { FriendsView() }
                 .tabItem { Label("Friends", systemImage: "person.2") }
-            NavigationStack { SettingsView() }
-                .tabItem { Label("Settings", systemImage: "gearshape") }
+            NavigationStack { ChatRootView() }
+                .tabItem { Label("Chat", systemImage: "bubble.left.and.bubble.right") }
         }
+        .environmentObject(irc)
     }
 }
